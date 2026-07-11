@@ -128,6 +128,27 @@ def dashboard():
         tasks=tasks
     )
 
+@app.route("/add_task", methods=["POST"])
+def add_task():
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    title = request.form["title"]
+    description = request.form["description"]
+    priority = request.form["priority"]
+
+    task = Task(
+        title=title,
+        description=description,
+        priority=priority,
+        user_id=session["user_id"]
+    )
+
+    db.session.add(task)
+    db.session.commit()
+
+    return redirect("/dashboard")
 
 @app.route("/logout")
 def logout():

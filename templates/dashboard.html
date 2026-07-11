@@ -1,16 +1,81 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}
+Dashboard
+{% endblock %}
 
 {% block content %}
 
 <div class="container mt-5">
 
-    <h2>Task Dashboard</h2>
+    <h2 class="mb-4">
+        Task Dashboard
+    </h2>
 
-    <button class="btn btn-primary mt-3">
-        Add Task
-    </button>
+    <div class="card p-4 shadow">
+
+        <form method="POST"
+              action="/add_task">
+
+            <input
+                type="text"
+                name="title"
+                class="form-control mb-3"
+                placeholder="Task Title"
+                required>
+
+            <textarea
+                name="description"
+                class="form-control mb-3"
+                placeholder="Description">
+            </textarea>
+
+            <select
+                name="priority"
+                class="form-control mb-3">
+
+                <option>Low</option>
+                <option>Medium</option>
+                <option>High</option>
+
+            </select>
+
+            <button
+                class="btn btn-primary">
+
+                Add Task
+
+            </button>
+
+        </form>
+
+    </div>
+
+    <br>
+
+    {% for task in tasks %}
+
+    <div class="card p-3 shadow mb-3">
+
+        <h4>{{ task.title }}</h4>
+
+        <p>{{ task.description }}</p>
+
+        <b>Priority:</b>
+        {{ task.priority }}
+
+        <br><br>
+
+        <a href="/delete_task/{{task.id}}"
+           class="btn btn-danger">
+
+           Delete
+
+        </a>
+
+    </div>
+
+    {% endfor %}
 
 </div>
 
