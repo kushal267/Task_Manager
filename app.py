@@ -150,6 +150,17 @@ def add_task():
 
     return redirect("/dashboard")
 
+@app.route("/delete_task/<int:id>")
+def delete_task(id):
+
+    task = Task.query.get_or_404(id)
+
+    db.session.delete(task)
+
+    db.session.commit()
+
+    return redirect("/dashboard")
+
 @app.route("/logout")
 def logout():
 
