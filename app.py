@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template
 from flask import request, redirect, session
 from werkzeug.security import generate_password_hash
@@ -113,20 +114,6 @@ def register():
     )
 
 
-@app.route("/dashboard")
-def dashboard():
-
-    if "user_id" not in session:
-        return redirect("/")
-    
-    tasks = Task.query.filter_by(
-        user_id=session["user_id"]
-    ).all()
-
-    return render_template(
-        "dashboard.html",
-        tasks=tasks
-    )
 
 @app.route("/add_task", methods=["POST"])
 def add_task():
@@ -137,11 +124,13 @@ def add_task():
     title = request.form["title"]
     description = request.form["description"]
     priority = request.form["priority"]
+    status = request.form["status"]
 
     task = Task(
         title=title,
         description=description,
         priority=priority,
+        status=status,
         user_id=session["user_id"]
     )
 
@@ -167,6 +156,120 @@ def logout():
     session.clear()
 
     return redirect("/")
+
+@app.route("/edit_task/<int:id>",
+    methods=["GET","POST"]
+)
+def edit_task(id):
+
+    task = Task.query.get_or_404(id)
+
+    if request.method == "POST":
+
+        task.title = request.form["title"]
+        task.description = request.form["description"]
+        task.priority = request.form["priority"]
+        task.status = request.form["status"]
+
+        db.session.commit()
+
+        return redirect("/dashboard")
+
+    return render_template(
+        "edit_task.html",
+        task=task
+    )
+@app.route("/dashboard")
+def dashboard():
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    search = request.args.get("search")
+
+    if search:
+
+        tasks = Task.query.filter(
+            Task.user_id == session["user_id"],
+            Task.title.contains(search)
+        ).all()
+
+    else:
+
+        tasks = Task.query.filter_by(
+            user_id=session["user_id"]
+        ).all()
+
+    total = Task.query.filter_by(
+        user_id=session["user_id"]
+    ).count()
+
+    pending = Task.query.filter_by(
+        user_id=session["user_id"],
+        status="Pending"
+    ).count()
+
+    completed = Task.query.filter_by(
+        user_id=session["user_id"],
+        status="Completed"
+    ).count()
+
+    in_progress = Task.query.filter_by(
+        user_id=session["user_id"],
+        status="In Progress"
+    ).count()
+
+    return render_template(
+        "dashboard.html",
+        tasks=tasks,
+        total=total,
+        pending=pending,
+        completed=completed,
+        in_progress=in_progress
+    )
+"""@app.route("/dashboard")
+def dashboard():
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    search = request.args.get("search")
+
+    if search:
+
+        tasks = Task.query.filter(
+            Task.user_id == session["user_id"],
+            Task.title.contains(search)
+        ).all()
+
+    else:
+
+        tasks = Task.query.filter_by(
+            user_id=session["user_id"]
+        ).all()
+
+        total = len(tasks)
+        completed = len([t for t in tasks if t.status == "Completed"])
+        pending = len([t for t in tasks if t.status == "Pending"])
+        progress = len([t for t in tasks if t.status == "In Progress"])
+
+    pending = Task.query.filter_by(
+    user_id=session["user_id"],
+    status="Pending"
+).count()
+
+completed = Task.query.filter_by(
+    user_id=session["user_id"],
+    status="Completed"
+).count()
+
+return render_template(
+    "dashboard.html",
+    tasks=tasks,
+    pending=pending,
+    completed=completed
+)   
+"""
 @app.route("/users")
 def users():
 
@@ -176,6 +279,8 @@ def users():
         print(u.id, u.name, u.email, u.password)
 
     return "Check Terminal"
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)

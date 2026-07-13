@@ -11,9 +11,57 @@ Dashboard
     <h2 class="mb-4">
         Task Dashboard
     </h2>
+    <div class="row mb-4">
 
+    <div class="col-md-3">
+        <div class="card p-3 shadow">
+            <h5>Total</h5>
+            <h2>{{ total }}</h2>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card p-3 shadow">
+            <h5>Pending</h5>
+            <h2>{{ pending }}</h2>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card p-3 shadow">
+            <h5>In Progress</h5>
+            <h2>{{ in_progress }}</h2>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card p-3 shadow">
+            <h5>Completed</h5>
+            <h2>{{ completed }}</h2>
+        </div>
+    </div>
+
+    </div>
     <div class="card p-4 shadow">
 
+
+        <form method="GET"
+      action="/dashboard"
+      class="mb-4">
+
+    <input
+        type="text"
+        name="search"
+        class="form-control mb-2"
+        placeholder="Search Task">
+
+    <button class="btn btn-dark">
+
+        Search
+
+    </button>
+
+</form>
         <form method="POST"
               action="/add_task">
 
@@ -37,6 +85,16 @@ Dashboard
                 <option>Low</option>
                 <option>Medium</option>
                 <option>High</option>
+
+
+            </select>
+            <select 
+    name="status"
+    class="form-control mb-3">
+
+    <option>Pending</option>
+    <option>In Progress</option>
+    <option>Completed</option>
 
             </select>
 
@@ -63,8 +121,18 @@ Dashboard
 
         <b>Priority:</b>
         {{ task.priority }}
+         <br>
+
+         <b>Status:</b>
+         {{ task.status }}
 
         <br><br>
+        <a href="/edit_task/{{task.id}}"
+           class="btn btn-warning">
+
+          Edit
+
+        </a>
 
         <a href="/delete_task/{{task.id}}"
            class="btn btn-danger">
