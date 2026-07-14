@@ -8,142 +8,257 @@ Dashboard
 
 <div class="container mt-5">
 
-    <h2 class="mb-4">
-        Task Dashboard
-    </h2>
-    <div class="row mb-4">
+<h2 class="mb-4">
+    Task Dashboard
+</h2>
+
+<div class="row mb-4">
 
     <div class="col-md-3">
-        <div class="card p-3 shadow">
+        <div class="card p-3 shadow stats-card">
             <h5>Total</h5>
-            <h2>{{ total }}</h2>
+            <h2>{{total}}</h2>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card p-3 shadow">
+        <div class="card p-3 shadow stats-card">
             <h5>Pending</h5>
-            <h2>{{ pending }}</h2>
+            <h2>{{pending}}</h2>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card p-3 shadow">
+        <div class="card p-3 shadow stats-card">
             <h5>In Progress</h5>
-            <h2>{{ in_progress }}</h2>
+            <h2>{{in_progress}}</h2>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card p-3 shadow">
+        <div class="card p-3 shadow stats-card">
             <h5>Completed</h5>
-            <h2>{{ completed }}</h2>
+            <h2>{{completed}}</h2>
         </div>
     </div>
 
+</div>
+
+
+<div class="card shadow p-4">
+
+    <h5>Completion Progress</h5>
+
+    <div class="progress mb-4">
+
+        <div class="progress-bar"
+            style="width: {{ percentage }}%; ">
+
+            {{ percentage }}%
+
+        </div>
+
     </div>
-    <div class="card p-4 shadow">
 
 
-        <form method="GET"
-      action="/dashboard"
-      class="mb-4">
+    <form method="GET"
+          action="/dashboard"
+          class="mb-4">
 
-    <input
-        type="text"
-        name="search"
-        class="form-control mb-2"
-        placeholder="Search Task">
+        <div class="row">
 
-    <button class="btn btn-dark">
+            <div class="col-md-10">
 
-        Search
+                <input
+                        type="text"
+                        name="search"
+                        class="form-control"
+                        placeholder="Search Task">
 
-    </button>
+            </div>
 
-</form>
-        <form method="POST"
-              action="/add_task">
+            <div class="col-md-2">
 
-            <input
+                <button
+                        class="btn btn-dark w-100">
+
+                    Search
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </form>
+
+    <a href="/export"
+       class="btn btn-success mb-4">
+
+        Export Excel
+
+    </a>
+
+    <form method="POST"
+          action="/add_task">
+
+        <input
                 type="text"
                 name="title"
                 class="form-control mb-3"
                 placeholder="Task Title"
                 required>
 
-            <textarea
+        <textarea
                 name="description"
                 class="form-control mb-3"
-                placeholder="Description">
-            </textarea>
+                placeholder="Description"></textarea>
 
-            <select
+        <select
                 name="priority"
                 class="form-control mb-3">
 
-                <option>Low</option>
-                <option>Medium</option>
-                <option>High</option>
+            <option>Low</option>
+            <option>Medium</option>
+            <option>High</option>
 
+        </select>
 
-            </select>
-            <select 
-    name="status"
-    class="form-control mb-3">
+        <select
+                name="status"
+                class="form-control mb-3">
 
-    <option>Pending</option>
-    <option>In Progress</option>
-    <option>Completed</option>
+            <option>Pending</option>
+            <option>In Progress</option>
+            <option>Completed</option>
 
-            </select>
+        </select>
 
-            <button
+        <input
+                type="date"
+                name="due_date"
+                class="form-control mb-3">
+
+        <button
                 class="btn btn-primary">
 
-                Add Task
+            Add Task
 
-            </button>
+        </button>
 
-        </form>
+    </form>
 
-    </div>
+</div>
 
-    <br>
+<br>
 
-    {% for task in tasks %}
+{% for task in tasks %}
 
-    <div class="card p-3 shadow mb-3">
+<div class="card shadow p-4 mb-3">
 
-        <h4>{{ task.title }}</h4>
+    <h4>
 
-        <p>{{ task.description }}</p>
+        {% if task.status=="Completed" %}
 
-        <b>Priority:</b>
-        {{ task.priority }}
-         <br>
+            <del>
+                {{task.title}}
+            </del>
 
-         <b>Status:</b>
-         {{ task.status }}
+        {% else %}
 
-        <br><br>
-        <a href="/edit_task/{{task.id}}"
-           class="btn btn-warning">
+            {{task.title}}
 
-          Edit
+        {% endif %}
 
-        </a>
+    </h4>
 
-        <a href="/delete_task/{{task.id}}"
-           class="btn btn-danger">
+    <p>
+        {{task.description}}
+    </p>
 
-           Delete
+    <b>Priority :</b>
 
-        </a>
+    {% if task.priority=="High" %}
 
-    </div>
+        <span class="badge bg-danger">
 
-    {% endfor %}
+            High
+
+        </span>
+
+    {% elif task.priority=="Medium" %}
+
+        <span class="badge bg-warning">
+
+            Medium
+
+        </span>
+
+    {% else %}
+
+        <span class="badge bg-success">
+
+            Low
+
+        </span>
+
+    {% endif %}
+
+    <br><br>
+
+    <b>Status :</b>
+
+    {% if task.status=="Completed" %}
+
+        <span class="badge bg-success">
+
+            Completed
+
+        </span>
+
+    {% elif task.status=="In Progress" %}
+
+        <span class="badge bg-primary">
+
+            In Progress
+
+        </span>
+
+    {% else %}
+
+        <span class="badge bg-secondary">
+
+            Pending
+
+        </span>
+
+    {% endif %}
+
+    <br><br>
+
+    <b>Due Date :</b>
+
+    {{task.due_date}}
+
+    <br><br>
+
+    <a href="/edit_task/{{task.id}}"
+       class="btn btn-warning">
+
+        Edit
+
+    </a>
+
+    <a href="/delete_task/{{task.id}}"
+       class="btn btn-danger">
+       onclick="return confirm('Delete Task?')">
+        Delete
+
+    </a>
+
+</div>
+
+{% endfor %}
 
 </div>
 

@@ -14,3 +14,8 @@ class User(db.Model):
 
     password = db.Column(db.String(200),
                          nullable=False)
+    profile_pic = db.Column(db.String(200),
+                 nullable= True )
+
+    is_admin = db.Column(db.Boolean,
+                    default=False) 

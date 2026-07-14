@@ -1,15 +1,35 @@
-
+import os
 from flask import Flask, render_template
 from flask import request, redirect, session
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
-
+from werkzeug.utils import secure_filename
+import pandas as pd
+from flask import send_file
 from models.user import db, User
 from models.task import Task
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from flask import (
+    send_file,
+    jsonify
+)
+
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    jwt_required
+)
 
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = "secret123"
+
+app.config["JWT_SECRET_KEY"]="jwt-secret"
+
+jwt = JWTManager(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = \
     'sqlite:///app.db'
@@ -18,7 +38,13 @@ db.init_app(app)
 
 with app.app_context():
     db.create_all()
+UPLOAD_FOLDER = "static/uploads"
 
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+os.makedirs(
+    app.config["UPLOAD_FOLDER"],
+    exist_ok=True
+)
 @app.route("/", methods=["GET", "POST"])
 def login():
 
@@ -163,14 +189,15 @@ def logout():
 def edit_task(id):
 
     task = Task.query.get_or_404(id)
-
+    
     if request.method == "POST":
 
         task.title = request.form["title"]
         task.description = request.form["description"]
         task.priority = request.form["priority"]
         task.status = request.form["status"]
-
+        task.due_date = request.form["due_date"]
+        
         db.session.commit()
 
         return redirect("/dashboard")
@@ -227,49 +254,103 @@ def dashboard():
         completed=completed,
         in_progress=in_progress
     )
-"""@app.route("/dashboard")
-def dashboard():
+
+@app.route(
+    "/profile",
+    methods=["GET","POST"]
+)
+def profile():
 
     if "user_id" not in session:
         return redirect("/")
 
-    search = request.args.get("search")
+    user = User.query.get(
+        session["user_id"] )
+    if user is None:
+        session.clear()
+        return redirect("/")
 
-    if search:
 
-        tasks = Task.query.filter(
-            Task.user_id == session["user_id"],
-            Task.title.contains(search)
-        ).all()
+    if request.method == "POST":
 
-    else:
+        user.name = request.form["name"]
+        user.email = request.form["email"]
+        user.bio = request.form["bio"]
 
-        tasks = Task.query.filter_by(
-            user_id=session["user_id"]
-        ).all()
+        photo = request.files.get("photo")
 
-        total = len(tasks)
-        completed = len([t for t in tasks if t.status == "Completed"])
-        pending = len([t for t in tasks if t.status == "Pending"])
-        progress = len([t for t in tasks if t.status == "In Progress"])
+        if photo and photo.filename != "":
 
-    pending = Task.query.filter_by(
-    user_id=session["user_id"],
-    status="Pending"
-).count()
+            filename = secure_filename(
+                photo.filename
+            )
+            photo.save(
+                os.path.join(
+                app.config["UPLOAD_FOLDER"],
+                filename
+            )
+            )
 
-completed = Task.query.filter_by(
-    user_id=session["user_id"],
-    status="Completed"
-).count()
+            user.profile_pic = filename
 
-return render_template(
-    "dashboard.html",
-    tasks=tasks,
-    pending=pending,
-    completed=completed
-)   
-"""
+        db.session.commit()
+
+        return redirect("/profile")
+
+    return render_template(
+        "profile.html",
+        user=user
+    )
+"""def profile():
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    user = User.query.get( session["user_id"] )
+    return render_template(
+        "profile.html",
+        user=user
+    )"""
+
+@app.route("/export")
+def export():
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    tasks = Task.query.filter_by(
+        user_id=session["user_id"]
+    ).all()
+
+    data=[]
+
+    for t in tasks:
+
+        data.append({
+
+            "Title":t.title,
+            "Description":t.description,
+            "Priority":t.priority,
+            "Status":t.status,
+            "Due Date":t.due_date
+
+
+        })
+
+    df = pd.DataFrame(data)
+
+    file="tasks.xlsx"
+
+    df.to_excel(
+        file,
+        index=False
+    )
+
+    return send_file(
+        file,
+        as_attachment=True
+    )
+
 @app.route("/users")
 def users():
 
@@ -280,7 +361,27 @@ def users():
 
     return "Check Terminal"
 
+@app.route("/delete_photo")
+def delete_photo():
 
+    user = User.query.get(
+        session["user_id"]
+    )
+
+    if user.profile_pic:
+
+        path = os.path.join(
+            app.config["UPLOAD_FOLDER"],
+            user.profile_pic
+        )
+
+        if os.path.exists(path):
+            os.remove(path)
+
+        user.profile_pic = None
+        db.session.commit()
+
+    return redirect("/profile")
 
 if __name__ == "__main__":
     app.run(debug=True)
