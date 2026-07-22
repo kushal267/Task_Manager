@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}
+Admin Panel
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+<h2 class="mb-5">
+
+    Admin Dashboard
+
+</h2>
+
+<div class="row mb-5">
+
+    <div class="col-md-4">
+
+        <div class="card p-4 shadow">
+
+            <h5>Total Users</h5>
+
+            <h1>
+
+                {{total_users}}
+
+            </h1>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-4">
+
+        <div class="card p-4 shadow">
+
+            <h5>Total Tasks</h5>
+
+            <h1>
+
+                {{total_tasks}}
+
+            </h1>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-4">
+
+        <div class="card p-4 shadow">
+
+            <h5>Completed Tasks</h5>
+
+            <h1>
+
+                {{completed}}
+
+            </h1>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="card shadow p-4">
+
+<h4 class="mb-4">
+
+    Users
+
+</h4>
+
+<table class="table">
+
+<tr>
+
+<th>ID</th>
+<th>Name</th>
+<th>Email</th>
+<th>Admin</th>
+<th>Action</th>
+
+</tr>
+
+{% for user in users %}
+
+<tr>
+
+<td>
+
+{{user.id}}
+
+</td>
+
+<td>
+
+{{user.name}}
+
+</td>
+
+<td>
+
+{{user.email}}
+
+</td>
+
+<td>
+
+{{user.is_admin}}
+
+</td>
+
+<td>
+
+<button
+class="btn btn-danger"
+onclick="deleteUser('{{user.id}}')">
+
+Delete
+
+</button>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+</div>
+
+<script>
+
+function deleteUser(id){
+
+    if(
+        confirm(
+            "Delete user permanently?"
+        )
+    ){
+
+        window.location =
+        "/delete_user/" + id
+
+    }
+
+}
+
+</script>
+
+{% endblock %}

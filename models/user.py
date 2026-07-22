@@ -19,3 +19,5 @@ class User(db.Model):
 
     is_admin = db.Column(db.Boolean,
                     default=False) 
+    role = db.Column(db.String(20),
+    default="user" )
