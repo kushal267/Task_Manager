@@ -5,33 +5,59 @@ Dashboard
 {% endblock %}
 
 {% block content %}
+<style>
+    .clickable-card {
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .clickable-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+    .highlight-pending { animation: glow-secondary 1.5s ease-out; }
+    .highlight-progress { animation: glow-primary 1.5s ease-out; }
+    .highlight-completed { animation: glow-success 1.5s ease-out; }
 
+    @keyframes glow-secondary {
+        0%, 100% { transform: scale(1); box-shadow: none; }
+        50% { transform: scale(1.02); box-shadow: 0 0 20px #fafa5e; }
+    }
+    @keyframes glow-primary {
+        0%, 100% { transform: scale(1); box-shadow: none; }
+        50% { transform: scale(1.02); box-shadow: 0 0 20px #0d6efd; }
+    }
+    @keyframes glow-success {
+        0%, 100% { transform: scale(1); box-shadow: none; }
+        50% { transform: scale(1.02); box-shadow: 0 0 20px #198754; }
+    }
+    .empty-state { display: block; }
+    .kanban-list:has(.task-item) .empty-state { display: none; }
+</style>
 <div class="container mt-5">
 
     <h2 class="mb-4">Task Dashboard</h2>
 
-    
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="card p-3 shadow stats-card border-0 border-start border-5 border-dark">
+            <div class="card p-3 shadow stats-card border-0 border-start border-5 border-dark clickable-card" onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})">
                 <h5 class="text-muted">Total</h5>
                 <h2>{{ total }}</h2>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card p-3 shadow stats-card border-0 border-start border-5 border-secondary">
+            <div class="card p-3 shadow stats-card border-0 border-start border-5 border-secondary clickable-card" onclick="highlightColumn('pending-col', 'highlight-pending')">
                 <h5 class="text-muted">Pending</h5>
                 <h2>{{ pending }}</h2>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card p-3 shadow stats-card border-0 border-start border-5 border-primary">
+            <div class="card p-3 shadow stats-card border-0 border-start border-5 border-primary clickable-card" onclick="highlightColumn('progress-col', 'highlight-progress')">
                 <h5 class="text-muted">In Progress</h5>
                 <h2>{{ in_progress }}</h2>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card p-3 shadow stats-card border-0 border-start border-5 border-success">
+            <div class="card p-3 shadow stats-card border-0 border-start border-5 border-success clickable-card" onclick="highlightColumn('completed-col', 'highlight-completed')">
                 <h5 class="text-muted">Completed</h5>
                 <h2>{{ completed }}</h2>
             </div>
@@ -133,7 +159,14 @@ Dashboard
                 </small>
             {% endif %}
         </form>
-
+        <!-- SMART QUICK FILTERS -->
+        <div class="d-flex gap-2 mb-4 flex-wrap">
+            <span class="text-muted fw-bold align-self-center me-2">Quick Filters:</span>
+            <a href="/dashboard" class="btn btn-sm btn-outline-secondary rounded-pill">All Tasks</a>
+            <a href="/dashboard?filter=high" class="btn btn-sm btn-outline-danger rounded-pill">🔥 High Priority</a>
+            <a href="/dashboard?filter=today" class="btn btn-sm btn-outline-primary rounded-pill">📅 Due Today</a>
+            <a href="/dashboard?filter=overdue" class="btn btn-sm btn-outline-warning rounded-pill text-dark">⚠️ Overdue</a>
+        </div>
         <a href="/export" class="btn btn-success mb-4">Export Excel</a>
 
         <!-- ADD TASK FORM -->
@@ -172,35 +205,38 @@ Dashboard
         </form>
     </div>
 
-   
+   <!--kanbadh-->
+    
     <h3 class="mb-3">My Tasks</h3>
     <div class="row mb-5">
         
-        <div class="col-md-4 mb-4">
+        <!-- Column 1: PENDING -->
+        <div class="col-md-4 mb-4" id="pending-col">
             <h5 class="text-center bg-secondary text-white p-2 rounded shadow-sm">Pending</h5>
-            <div class="bg-light p-3 rounded shadow-sm" style="min-height: 50vh;">
+            <!-- Added id and data-status here -->
+            <div class="bg-light p-3 rounded shadow-sm kanban-list" id="pending-list" data-status="Pending" style="min-height: 50vh;">
+                
+                <div class="empty-state text-center mt-5 opacity-50">
+                    <h1 class="display-3 mb-2">☕</h1>
+                    <h6 class="fw-bold">All caught up!</h6>
+                    <small>No pending tasks here.</small>
+                </div>
+                
                 {% for task in tasks %}
                     {% if task.status == "Pending" %}
-                        <div class="card shadow-sm mb-3 p-3 border-start border-4 border-secondary">
+                        <!-- Added data-id and cursor:grab here -->
+                        <div class="card shadow-sm mb-3 p-3 border-start border-4 border-secondary task-item" data-id="{{ task.id }}" style="cursor: grab;">
                             <h6 class="fw-bold">{{ task.title }}</h6>
+                            <!-- Rest of your task card content remains the same... -->
                             <p class="text-muted small mb-2">{{ task.description }}</p>
-                            
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="badge 
-                                    {% if task.priority == 'High' %}bg-danger
-                                    {% elif task.priority == 'Medium' %}bg-warning text-dark
-                                    {% else %}bg-success{% endif %}">
+                                <span class="badge {% if task.priority == 'High' %}bg-danger{% elif task.priority == 'Medium' %}bg-warning text-dark{% else %}bg-success{% endif %}">
                                     {{ task.priority }}
                                 </span>
                                 <small class="fw-bold {% if task.due_date < today %}text-danger{% else %}text-muted{% endif %}">
-                                   {% if task.due_date < today %}
-                                       ⚠️ Overdue ({{ task.due_date }})
-                                   {% else %}
-                                   {{ task.due_date }}
-                                   {% endif %}
+                                    {% if task.due_date < today %}⚠️ Overdue ({{ task.due_date }}){% else %}{{ task.due_date }}{% endif %}
                                 </small>
                             </div>
-                            
                             <div class="mt-2 text-end border-top pt-2">
                                 <a href="/edit_task/{{task.id}}" class="btn btn-sm btn-outline-primary">Edit</a>
                                 <button class="btn btn-sm btn-outline-danger" onclick="deleteTask('{{task.id}}')">Delete</button>
@@ -211,26 +247,31 @@ Dashboard
             </div>
         </div>
 
-
-        <div class="col-md-4 mb-4">
+        <!-- Column 2: IN PROGRESS -->
+        <div class="col-md-4 mb-4" id="progress-col">
             <h5 class="text-center bg-primary text-white p-2 rounded shadow-sm">In Progress</h5>
-            <div class="bg-light p-3 rounded shadow-sm" style="min-height: 50vh;">
+            <div class="bg-light p-3 rounded shadow-sm kanban-list" id="progress-list" data-status="In Progress" style="min-height: 50vh;">
+                
+                <div class="empty-state text-center mt-5 opacity-50">
+                    <h1 class="display-3 mb-2">🚀</h1>
+                    <h6 class="fw-bold">Nothing in progress.</h6>
+                    <small>Drag a task here to start working.</small>
+                </div>
+                
+               
                 {% for task in tasks %}
                     {% if task.status == "In Progress" %}
-                        <div class="card shadow-sm mb-3 p-3 border-start border-4 border-primary">
+                        <div class="card shadow-sm mb-3 p-3 border-start border-4 border-primary task-item" data-id="{{ task.id }}" style="cursor: grab;">
                             <h6 class="fw-bold">{{ task.title }}</h6>
                             <p class="text-muted small mb-2">{{ task.description }}</p>
-                            
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="badge 
-                                    {% if task.priority == 'High' %}bg-danger
-                                    {% elif task.priority == 'Medium' %}bg-warning text-dark
-                                    {% else %}bg-success{% endif %}">
+                                <span class="badge {% if task.priority == 'High' %}bg-danger{% elif task.priority == 'Medium' %}bg-warning text-dark{% else %}bg-success{% endif %}">
                                     {{ task.priority }}
                                 </span>
-                                <small class="text-muted fw-bold">{{ task.due_date }}</small>
+                                <small class="fw-bold {% if task.due_date < today %}text-danger{% else %}text-muted{% endif %}">
+                                    {% if task.due_date < today %}⚠️ Overdue ({{ task.due_date }}){% else %}{{ task.due_date }}{% endif %}
+                                </small>
                             </div>
-                            
                             <div class="mt-2 text-end border-top pt-2">
                                 <a href="/edit_task/{{task.id}}" class="btn btn-sm btn-outline-primary">Edit</a>
                                 <button class="btn btn-sm btn-outline-danger" onclick="deleteTask('{{task.id}}')">Delete</button>
@@ -241,16 +282,21 @@ Dashboard
             </div>
         </div>
 
-       
-        <div class="col-md-4 mb-4">
+        <!-- Column 3: COMPLETED -->
+        <div class="col-md-4 mb-4" id="completed-col">
             <h5 class="text-center bg-success text-white p-2 rounded shadow-sm">Completed</h5>
-            <div class="bg-light p-3 rounded shadow-sm" style="min-height: 50vh;">
+            <div class="bg-light p-3 rounded shadow-sm kanban-list" id="completed-list" data-status="Completed" style="min-height: 50vh;">
+                
+            <div class="empty-state text-center mt-5 opacity-50">
+                <h1 class="display-3 mb-2">🎯</h1>
+                <h6 class="fw-bold">No goals crushed yet.</h6>
+                <small>Complete tasks to see them here.</small>
+            </div>   
                 {% for task in tasks %}
                     {% if task.status == "Completed" %}
-                        <div class="card shadow-sm mb-3 p-3 border-start border-4 border-success bg-white text-muted opacity-75">
+                        <div class="card shadow-sm mb-3 p-3 border-start border-4 border-success bg-white text-muted opacity-75 task-item" data-id="{{ task.id }}" style="cursor: grab;">
                             <h6 class="fw-bold"><del>{{ task.title }}</del></h6>
                             <p class="small mb-2">{{ task.description }}</p>
-                            
                             <div class="mt-2 text-end border-top pt-2">
                                 <a href="/edit_task/{{task.id}}" class="btn btn-sm btn-outline-secondary">Edit</a>
                                 <button class="btn btn-sm btn-outline-danger" onclick="deleteTask('{{task.id}}')">Delete</button>
@@ -270,6 +316,64 @@ Dashboard
             window.location = "/delete_task/" + id;
         }
     }
+    function highlightColumn(colId, highlightClass) {
+        const column = document.getElementById(colId);
+        if (column) {
+           
+            column.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          
+            column.classList.add(highlightClass);
+            
+            
+            setTimeout(() => {
+                column.classList.remove(highlightClass);
+            }, 1500);
+        }
+        }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
+<script>
+    // Initialize Drag and Drop
+    document.addEventListener("DOMContentLoaded", function() {
+        const lists = ['pending-list', 'progress-list', 'completed-list'];
+        
+        lists.forEach(listId => {
+            const el = document.getElementById(listId);
+            new Sortable(el, {
+                group: 'kanban', // Allows dragging between columns
+                animation: 150,
+                ghostClass: 'bg-light', // Class added while dragging
+                onEnd: function (evt) {
+                    const itemEl = evt.item; 
+                    const toList = evt.to;   
+                    
+                    const taskId = itemEl.getAttribute('data-id');
+                    const newStatus = toList.getAttribute('data-status');
+                    
+                    // Agar task alag column mein drop hua hai tabhi database update karein
+                    if (evt.from !== toList) {
+                        fetch(`/update_status/${taskId}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ status: newStatus })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if(data.success) {
+                                // SweetAlert popup bina page refresh kiye
+                                Swal.fire({
+                                    toast: true, position: 'top-end', icon: 'success', 
+                                    title: 'Moved to ' + newStatus, showConfirmButton: false, timer: 2000
+                                });
+                                // Optional: Update colors visually (Pending is grey, Success is green etc.)
+                                location.reload(); // Quick visual refresh to update strikethrough/colors
+                            }
+                        });
+                    }
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

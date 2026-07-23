@@ -11,7 +11,8 @@ from models.task import Task
 from flask import Flask, render_template, request, redirect, session, flash
 from datetime import date
 import pandas as pd
-
+from datetime import date
+from flask import request, jsonify
 
 
 
@@ -230,46 +231,66 @@ def dashboard():
     if "user_id" not in session:
         return redirect("/")
 
+    today_str = date.today().isoformat()
     search = request.args.get("search")
+    filter_type = request.args.get("filter") # Naya filter parameter
 
+    # Base query
+    query = Task.query.filter_by(user_id=session["user_id"])
+
+    # Search Logic
     if search:
-        tasks = Task.query.filter(
-            Task.user_id == session["user_id"],
-            Task.title.contains(search)
-        ).all()
-    else:
-        tasks = Task.query.filter_by(
-            user_id=session["user_id"]
-        ).all()
+        query = query.filter(Task.title.contains(search))
+    
+    # Smart Filter Logic
+    if filter_type == "high":
+        query = query.filter(Task.priority == "High")
+    elif filter_type == "today":
+        query = query.filter(Task.due_date == today_str)
+    elif filter_type == "overdue":
+        query = query.filter(Task.due_date < today_str, Task.status != "Completed")
 
+    tasks = query.all()
+
+    # Stats logic (unchanged)
     total = Task.query.filter_by(user_id=session["user_id"]).count()
     pending = Task.query.filter_by(user_id=session["user_id"], status="Pending").count()
     completed = Task.query.filter_by(user_id=session["user_id"], status="Completed").count()
     in_progress = Task.query.filter_by(user_id=session["user_id"], status="In Progress").count()
     
-    if total > 0:
-        percentage = int((completed / total) * 100)
-    else:
-        percentage = 0
+    percentage = int((completed / total) * 100) if total > 0 else 0
 
-    # Get Priority Counts for the Bar Chart
     low = Task.query.filter_by(user_id=session["user_id"], priority="Low").count()
     medium = Task.query.filter_by(user_id=session["user_id"], priority="Medium").count()
     high = Task.query.filter_by(user_id=session["user_id"], priority="High").count()
 
     return render_template(
-        "dashboard.html",
-        tasks=tasks,
-        total=total,
-        pending=pending,
-        completed=completed,
-        in_progress=in_progress,
-        percentage=percentage,
-        low=low,
-        medium=medium,
-        high=high,
-        today=date.today().isoformat()
+        "dashboard.html", tasks=tasks, total=total, pending=pending, 
+        completed=completed, in_progress=in_progress, percentage=percentage, 
+        low=low, medium=medium, high=high, today=today_str
     )
+
+#  DRAG & DROP 
+@app.route("/update_status/<int:id>", methods=["POST"])
+def update_status(id):
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    task = Task.query.get_or_404(id)
+    
+    # Security check: User apna hi task edit kar raha hai
+    if task.user_id != session["user_id"]:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.get_json()
+    new_status = data.get("status")
+    
+    if new_status in ["Pending", "In Progress", "Completed"]:
+        task.status = new_status
+        db.session.commit()
+        return jsonify({"success": True, "message": f"Task moved to {new_status}"})
+    
+    return jsonify({"error": "Invalid status"}), 400
 @app.route(
     "/profile",
     methods=["GET","POST"]
