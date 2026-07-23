@@ -11,39 +11,20 @@ Profile
 <div class="card shadow p-5">
 
 <div class="text-center">
+    {% if user.profile_pic %}
+        <img src="{{ url_for('static', filename='uploads/' + user.profile_pic) }}" 
+             width="180" height="180" class="rounded-circle shadow object-fit-cover">
+    {% else %}
+        <!-- Dynamic Initials Avatar -->
+        <div class="rounded-circle shadow d-flex justify-content-center align-items-center bg-primary text-white mx-auto" 
+             style="width: 180px; height: 180px; font-size: 80px; font-weight: bold;">
+            {{ user.name[0] | upper }}
+        </div>
+    {% endif %}
 
-      {% if user.profile_pic %}
-
-<img
-src="{{ url_for( 'static', filename='uploads/' + user.profile_pic ) }}"
-width="180"
-height="180"
-class="rounded-circle shadow">
-
-{% else %}
-<img
-src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-width="180"
-height="180"
-class="rounded-circle shadow">
-
-{% endif %}
-
-<h3 class="mt-4">
-
-{{ user.name }}
-
-</h3>
-
-
-<p class="text-muted">
-
-{{ user.email }}
-
-</p>
-
+    <h3 class="mt-4">{{ user.name }}</h3>
+    <p class="text-muted">{{ user.email }}</p>
 </div>
-
 <hr>
 
 <a href="/delete_photo"

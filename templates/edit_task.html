@@ -1,56 +1,74 @@
+{% extends "base.html" %}
 
-<div class="container mt-5">
+{% block title %}
+Edit Task
+{% endblock %}
 
-<div class="card p-4 shadow">
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded-3">
+                
+                <!-- Card Header -->
+                <div class="card-header bg-dark text-white text-center py-3 rounded-top">
+                    <h4 class="mb-0">Edit Task</h4>
+                </div>
+                
+                <!-- Card Body -->
+                <div class="card-body p-4 p-md-5 bg-light shadow-inner">
+                    <form method="POST">
+                        
+                        <!-- Title Field -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-muted">Task Title</label>
+                            <input type="text" name="title" value="{{ task.title }}" class="form-control form-control-lg border-secondary shadow-sm" required>
+                        </div>
 
-<h2>Edit Task</h2>
+                        <!-- Description Field -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-muted">Description</label>
+                            <textarea name="description" class="form-control border-secondary shadow-sm" rows="4">{{ task.description }}</textarea>
+                        </div>
 
-<form method="POST">
- 
-<input
-type="text"
-name="title"
-value="{{task.title}}"
-class="form-control mb-3">
+                        <!-- Priority, Status, and Due Date Row -->
+                        <div class="row mb-4">
+                            
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold text-muted">Priority</label>
+                                <select name="priority" class="form-select border-secondary shadow-sm">
+                                    <option value="Low" {% if task.priority == "Low" %}selected{% endif %}>Low</option>
+                                    <option value="Medium" {% if task.priority == "Medium" %}selected{% endif %}>Medium</option>
+                                    <option value="High" {% if task.priority == "High" %}selected{% endif %}>High</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold text-muted">Status</label>
+                                <select name="status" class="form-select border-secondary shadow-sm">
+                                    <option value="Pending" {% if task.status == "Pending" %}selected{% endif %}>Pending</option>
+                                    <option value="In Progress" {% if task.status == "In Progress" %}selected{% endif %}>In Progress</option>
+                                    <option value="Completed" {% if task.status == "Completed" %}selected{% endif %}>Completed</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold text-muted">Due Date</label>
+                                <input type="date" name="due_date" value="{{ task.due_date }}" class="form-control border-secondary shadow-sm" required>
+                            </div>
 
-<textarea
-name="description"
-class="form-control mb-3">{{task.description}}</textarea>
+                        </div>
 
-<select
-name="priority"
-class="form-control mb-3">
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-end gap-3 mt-4 pt-3 border-top">
+                            <a href="/dashboard" class="btn btn-outline-secondary px-4 fw-bold">Cancel</a>
+                            <button type="submit" class="btn btn-success px-4 fw-bold">Update Task</button>
+                        </div>
 
-<option {% if task.priority=="Low" %}selected{% endif %} >Low</option>
-<option {% if task.priority=="Medium" %}selected{% endif %} >Medium</option>
-<option {% if task.priority=="High" %}selected{% endif %} >High</option>
-
-</select>
-
-<select
-name="status"
-class="form-control mb-3">
-
-<option {% if task.status=="Pending" %}selected{% endif %} >Pending</option>
-<option {% if task.status=="In Progress" %}selected{% endif %} >In Progress</option>
-<option {% if task.status=="Completed" %}selected{% endif %} >Completed</option>
-
-</select>
-
-<input
-            type="date"
-            name="due_date"
-            value="{{task.due_date}}"
-            class="form-control mb-3">
-<button
-class="btn btn-success">
-
-Update Task
-
-</button>
-
-</form>
-
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-
-</div>
+{% endblock %}

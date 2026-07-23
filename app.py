@@ -9,7 +9,7 @@ from flask import send_file
 from models.user import db, User
 from models.task import Task
 from flask import Flask, render_template, request, redirect, session, flash
-
+from datetime import date
 import pandas as pd
 
 
@@ -267,7 +267,8 @@ def dashboard():
         percentage=percentage,
         low=low,
         medium=medium,
-        high=high
+        high=high,
+        today=date.today().isoformat()
     )
 @app.route(
     "/profile",

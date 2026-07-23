@@ -111,14 +111,27 @@ Dashboard
 
         <!-- SEARCH FORM -->
         <form method="GET" action="/dashboard" class="mb-4">
-            <div class="row">
-                <div class="col-md-10 mb-2">
-                    <input type="text" name="search" class="form-control" placeholder="Search Task by Title...">
-                </div>
-                <div class="col-md-2">
-                    <button class="btn btn-dark w-100">Search</button>
-                </div>
-            </div>
+           <div class="input-group input-group-lg shadow-sm">
+       
+               <input type="text" name="search" class="form-control border-secondary" 
+                     placeholder="Search Task by Title..." 
+                     value="{{ request.args.get('search', '') }}">
+        
+                <button class="btn btn-dark px-4 fw-bold" type="submit">Search</button>
+        
+        
+                {% if request.args.get('search') %}
+                <a href="/dashboard" class="btn btn-danger px-4 fw-bold text-decoration-none d-flex align-items-center">
+                    Clear ✖
+               </a>
+               {% endif %}
+           </div>
+    
+            {% if request.args.get('search') %}
+                <small class="text-muted mt-2 d-block">
+                Showing results for: <strong>"{{ request.args.get('search') }}"</strong>
+                </small>
+            {% endif %}
         </form>
 
         <a href="/export" class="btn btn-success mb-4">Export Excel</a>
@@ -179,7 +192,13 @@ Dashboard
                                     {% else %}bg-success{% endif %}">
                                     {{ task.priority }}
                                 </span>
-                                <small class="text-muted fw-bold">{{ task.due_date }}</small>
+                                <small class="fw-bold {% if task.due_date < today %}text-danger{% else %}text-muted{% endif %}">
+                                   {% if task.due_date < today %}
+                                       ⚠️ Overdue ({{ task.due_date }})
+                                   {% else %}
+                                   {{ task.due_date }}
+                                   {% endif %}
+                                </small>
                             </div>
                             
                             <div class="mt-2 text-end border-top pt-2">
